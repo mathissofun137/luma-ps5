@@ -175,12 +175,9 @@ body.nohints .hints{opacity:0}
 .hotbar button:hover{background:rgba(255,255,255,.28)}
 .hotbar .ps{background:#fff;color:#0a1a4a;font-weight:700;letter-spacing:.02em}
 #v-browser{background:#0b1022;z-index:25}
-.btool{position:absolute;left:0;right:0;top:0;height:calc(92*var(--u));display:flex;align-items:center;gap:calc(14*var(--u));padding:0 calc(36*var(--u));background:rgba(12,18,40,.96);border-bottom:calc(1*var(--u)) solid rgba(255,255,255,.08);z-index:3}
-.btool .ibtn{width:calc(56*var(--u));height:calc(56*var(--u));font-size:calc(30*var(--u));flex:none}
-.btool .sfield{flex:1;height:calc(60*var(--u));border-radius:calc(30*var(--u));padding:0 calc(26*var(--u))}
-.btool .sfield input{font-size:calc(22*var(--u))}
-.bframe{position:absolute;left:0;right:0;top:calc(92*var(--u));bottom:0}
-#v-browser iframe{top:0}
+.btool{display:none!important}
+.bframe{position:absolute;left:0;right:0;top:0;bottom:0}
+#v-browser iframe{top:0!important;height:100%!important}
 .bstart{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:calc(50*var(--u));background:radial-gradient(90% 70% at 50% 0%,#17306e,#0a1022 70%)}
 .bstart h1{font-size:calc(54*var(--u));font-weight:300;letter-spacing:.02em}
 .bstart .links{display:grid;grid-template-columns:repeat(4,calc(170*var(--u)));gap:calc(26*var(--u))}
@@ -315,14 +312,6 @@ body.booting #top,body.booting .hints{opacity:0;transform:translateY(calc(-20*va
 
 <!-- BROWSER -->
 <section class="view" id="v-browser">
-  <div class="btool">
-    <button class="ibtn" data-f id="br-back">‹</button>
-    <button class="ibtn" data-f id="br-fwd">›</button>
-    <button class="ibtn" data-f id="br-reload">↻</button>
-    <button class="ibtn" data-f id="br-home">⌂</button>
-    <div class="sfield" data-f id="br-sf"><i class="fa-solid fa-lock"></i><input id="br-q" placeholder="Search or enter web address" autocomplete="off" spellcheck="false"></div>
-    <button class="ibtn" data-f id="br-close">✕</button>
-  </div>
   <div class="bframe" id="bframe"></div>
 </section>
 
@@ -614,15 +603,15 @@ const brTarget=raw=>{raw=raw.trim();return looksUrl(raw)?(/^https?:\/\//i.test(r
 const brLabel=t=>t.startsWith("search:")?t.slice(7):t;
 function openBrowser(q,asUrl){showView("browser");setBackdrop(null);S.player={kind:"browser",title:"Web Browser"};brFrame();
   if(q)brGo(asUrl&&!/^https?:\/\//i.test(q)?"https://"+q:q);else if(BR.i>=0)brNav(BR.hist[BR.i]);
-  focusEl($("#br-sf"),$("#v-browser"))}
-function brNav(t){$("#br-q").value=brLabel(t);brPost({type:"safari-navigate",url:t})}
+  focusEl($("#bframe")||$("#v-browser"),$("#v-browser"))}
+function brNav(t){const q=$("#br-q");if(q)q.value=brLabel(t);brPost({type:"safari-navigate",url:t})}
 function brGo(raw){if(!raw||!raw.trim())return;const t=brTarget(raw);BR.hist=BR.hist.slice(0,BR.i+1);BR.hist.push(t);BR.i=BR.hist.length-1;brNav(t);$("#br-q").blur();snd.sel()}
-$("#br-q").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();brGo($("#br-q").value)}});
-$("#br-back").onclick=()=>{if(BR.i>0){BR.i--;brNav(BR.hist[BR.i]);snd.move()}else snd.err()};
-$("#br-fwd").onclick=()=>{if(BR.i<BR.hist.length-1){BR.i++;brNav(BR.hist[BR.i]);snd.move()}else snd.err()};
-$("#br-reload").onclick=()=>{if(BR.i>=0){brNav(BR.hist[BR.i]);snd.sel()}};
-$("#br-home").onclick=()=>{BR.i=-1;BR.hist=[];$("#br-q").value="";brPost({type:"safari-home"});snd.sel()};
-$("#br-close").onclick=()=>{S.player=null;goHome();snd.back()};
+const _brq=$("#br-q");if(_brq)_brq.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();brGo(_brq.value)}});
+const _brb=$("#br-back");if(_brb)_brb.onclick=()=>{if(BR.i>0){BR.i--;brNav(BR.hist[BR.i]);snd.move()}else snd.err()};
+const _brf=$("#br-fwd");if(_brf)_brf.onclick=()=>{if(BR.i<BR.hist.length-1){BR.i++;brNav(BR.hist[BR.i]);snd.move()}else snd.err()};
+const _brr=$("#br-reload");if(_brr)_brr.onclick=()=>{if(BR.i>=0){brNav(BR.hist[BR.i]);snd.sel()}};
+const _brh=$("#br-home");if(_brh)_brh.onclick=()=>{BR.i=-1;BR.hist=[];const q=$("#br-q");if(q)q.value="";brPost({type:"safari-home"});snd.sel()};
+const _brc=$("#br-close");if(_brc)_brc.onclick=()=>{S.player=null;goHome();snd.back()};
 
 /* ---------- netflix ---------- */
 const NF={built:false,sel:null};
@@ -737,7 +726,7 @@ $("#cc").addEventListener("mousedown",e=>{if(e.target.id==="cc")closeCC()});
 $("#settings").addEventListener("mouseleave",()=>{});
 $("#v-home").addEventListener("wheel",e=>{if(S.search||S.cc||S.settings)return;if(Math.abs(e.deltaY)+Math.abs(e.deltaX)<8)return;const d=(e.deltaX||e.deltaY)>0?1:-1;if(S.zone==="row")setIdx(S.idx[S.tab]+d)},{passive:true});
 $("#s-sf").addEventListener("mousedown",()=>focusEl($("#s-sf"),$("#search")));
-$("#br-sf").addEventListener("mousedown",()=>focusEl($("#br-sf"),$("#v-browser")));
+const _brsf=$("#br-sf");if(_brsf)_brsf.addEventListener("mousedown",()=>focusEl(_brsf,$("#v-browser")));
 $("#nf-sf").addEventListener("mousedown",()=>focusEl($("#nf-sf"),$("#v-netflix")));
 // keep focus ring in sync with real input focus
 document.addEventListener("focusin",e=>{if(e.target.tagName==="INPUT"){const w=e.target.closest("[data-f]");if(w){const sc=w.closest("#search,#v-browser,#v-netflix");if(sc)focusEl(w,sc)}}});
@@ -799,7 +788,7 @@ $$(".tab").forEach(b=>b.classList.toggle("active",b.dataset.tab===S.tab));$("#pa
 S.idx.games=Math.min(1,gamesItems().length-1);renderSel("games",true);renderSel("media",true);
 $("#boot").addEventListener("click",()=>powerOn());
 document.addEventListener("fullscreenchange",()=>fit());
-// Auto-boot into the OS (no key press required)
+// Auto-boot — no key press required
 setTimeout(powerOn, 400);
 </script>
 </body>
